@@ -1,0 +1,54 @@
+{
+  "project_name": "Dept Descent",
+  "goal": "Build the first playable horror extraction loop.",
+  "tasks": [
+    {
+      "title": "Make one playable room",
+      "done": false
+    },
+    {
+      "title": "Add player movement",
+      "done": false
+    },
+    {
+      "title": "Add flashlight interaction",
+      "done": false
+    },
+    {
+      "title": "Create extraction door",
+      "done": false
+    }
+  ],
+  "bugs": [
+    {
+      "title": "Example: player clips through wall",
+      "fixed": false
+    }
+  ],
+  "checklist": [
+    {
+      "title": "Project opens without errors",
+      "done": false
+    },
+    {
+      "title": "Main scene is assigned",
+      "done": true
+    },
+    {
+      "title": "Android export templates installed",
+      "done": false
+    },
+    {
+      "title": "Package name is set",
+      "done": false
+    },
+    {
+      "title": "App icon assigned",
+      "done": true
+    },
+    {
+      "title": "APK exported and tested",
+      "done": false
+    }
+  ]
+}
