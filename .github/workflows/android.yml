@@ -14,49 +14,92 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create Android debug keystore
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download Godot and export templates
         run: |
+          set -euxo pipefail
+          mkdir -p "$HOME/.local/share/godot/godot_executable"
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.2.2.stable"
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.2.2-stable/Godot_v4.2.2-stable_linux.x86_64.zip -O /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d "$HOME/.local/share/godot/godot_executable"
+          chmod +x "$HOME/.local/share/godot/godot_executable/Godot_v4.2.2-stable_linux.x86_64"
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.2.2-stable/Godot_v4.2.2-stable_export_templates.tpz -O /tmp/templates.tpz
+          unzip -q -o -j /tmp/templates.tpz -d "$HOME/.local/share/godot/export_templates/4.2.2.stable"
+
+      - name: Create Android debug keystore and editor settings
+        run: |
+          set -euxo pipefail
           mkdir -p "$HOME/.android"
-          keytool -genkeypair -v \
-            -keystore "$HOME/.android/debug.keystore" \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v \
+              -keystore "$HOME/.android/debug.keystore" \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          mkdir -p "$HOME/.config/godot"
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<'EOF'
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "/usr/local/lib/android/sdk"
+          export/android/java_sdk_path = "/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.*/x64"
+          export/android/debug_keystore = "/home/runner/.android/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          export/android/adb = "/usr/local/lib/android/sdk/platform-tools/adb"
+          export/android/jarsigner = "/usr/bin/jarsigner"
+          EOF
 
       - name: Patch export preset for CI debug build
         run: |
+          set -euxo pipefail
           python3 - <<'PY'
           from pathlib import Path
           p = Path('export_presets.cfg')
           text = p.read_text()
-          text = text.replace('package/signed=true\n', '')
-          text = text.replace('launcher_icons/main_192x192="res://icon.svg"\n', '')
-          text = text.replace('launcher_icons/adaptive_foreground_432x432="res://icon.svg"\n', '')
-          text = text.replace('launcher_icons/adaptive_background_432x432=""\n', '')
+          removals = [
+              'package/signed=true\n',
+              'launcher_icons/main_192x192="res://icon.svg"\n',
+              'launcher_icons/adaptive_foreground_432x432="res://icon.svg"\n',
+              'launcher_icons/adaptive_background_432x432=""\n',
+          ]
+          for value in removals:
+              text = text.replace(value, '')
+          insert = '''keystore/debug="/home/runner/.android/debug.keystore"
+          keystore/debug_user="androiddebugkey"
+          keystore/debug_password="android"
+          '''
           if 'keystore/debug=' not in text:
-              text += '\nkeystore/debug="/home/runner/.android/debug.keystore"\n'
-              text += 'keystore/debug_user="androiddebugkey"\n'
-              text += 'keystore/debug_password="android"\n'
+              marker = '[preset.0.options]\n\n'
+              text = text.replace(marker, marker + insert)
           p.write_text(text)
+          print(text)
           PY
 
-      - name: Export Android APK with Godot
-        uses: firebelley/godot-export@v6.0.0
-        with:
-          godot_executable_download_url: https://github.com/godotengine/godot-builds/releases/download/4.2.2-stable/Godot_v4.2.2-stable_linux.x86_64.zip
-          godot_export_templates_download_url: https://github.com/godotengine/godot-builds/releases/download/4.2.2-stable/Godot_v4.2.2-stable_export_templates.tpz
-          relative_project_path: ./
-          archive_output: true
-          use_preset_export_path: true
-          export_debug: true
+      - name: Import project
+        run: |
+          "$HOME/.local/share/godot/godot_executable/Godot_v4.2.2-stable_linux.x86_64" --headless -e --quit --path .
+
+      - name: Export Android debug APK
+        run: |
+          set -euxo pipefail
+          mkdir -p build
+          "$HOME/.local/share/godot/godot_executable/Godot_v4.2.2-stable_linux.x86_64" --headless --verbose --export-debug "Android APK" "build/BuildPilot.apk" --path .
+          ls -lah build
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: BuildPilot-Android
           path: build/BuildPilot.apk
-          if-no-files-found: warn
+          if-no-files-found: error
