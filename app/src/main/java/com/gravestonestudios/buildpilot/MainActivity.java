@@ -91,7 +91,8 @@ public class MainActivity extends Activity {
         }
         int done = 0;
         for (int i = 0; i < tasks.length(); i++) {
-            if (tasks.optJSONObject(i).optBoolean("done", false)) done++;
+            JSONObject task = tasks.optJSONObject(i);
+            if (task != null && task.optBoolean("done", false)) done++;
         }
         progress.setProgress(done * 100 / tasks.length());
     }
@@ -103,20 +104,23 @@ public class MainActivity extends Activity {
         content.addView(button("Add Task", () -> {
             String title = input.getText().toString().trim();
             if (!title.isEmpty()) {
-                data.optJSONArray("tasks").put(new JSONObject().put("title", title).put("done", false));
+                JSONArray tasks = data.optJSONArray("tasks");
+                if (tasks != null) tasks.put(item("title", title, "done", false));
                 saveData();
                 showTasks();
             }
         }));
 
         JSONArray tasks = data.optJSONArray("tasks");
+        if (tasks == null) return;
         for (int i = 0; i < tasks.length(); i++) {
             final int index = i;
             JSONObject task = tasks.optJSONObject(i);
+            if (task == null) continue;
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.addView(button(task.optBoolean("done", false) ? "✓" : "□", () -> {
-                task.put("done", !task.optBoolean("done", false));
+                setBool(task, "done", !task.optBoolean("done", false));
                 saveData();
                 showTasks();
             }), new LinearLayout.LayoutParams(96, 96));
@@ -138,20 +142,23 @@ public class MainActivity extends Activity {
         content.addView(button("Add Bug", () -> {
             String title = input.getText().toString().trim();
             if (!title.isEmpty()) {
-                data.optJSONArray("bugs").put(new JSONObject().put("title", title).put("fixed", false));
+                JSONArray bugs = data.optJSONArray("bugs");
+                if (bugs != null) bugs.put(item("title", title, "fixed", false));
                 saveData();
                 showBugs();
             }
         }));
 
         JSONArray bugs = data.optJSONArray("bugs");
+        if (bugs == null) return;
         for (int i = 0; i < bugs.length(); i++) {
             final int index = i;
             JSONObject bug = bugs.optJSONObject(i);
+            if (bug == null) continue;
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.addView(button(bug.optBoolean("fixed", false) ? "Fixed" : "Open", () -> {
-                bug.put("fixed", !bug.optBoolean("fixed", false));
+                setBool(bug, "fixed", !bug.optBoolean("fixed", false));
                 saveData();
                 showBugs();
             }), new LinearLayout.LayoutParams(150, 96));
@@ -170,10 +177,12 @@ public class MainActivity extends Activity {
         content.removeAllViews();
         content.addView(label("APK Build Checklist", 22, true));
         JSONArray list = data.optJSONArray("checklist");
+        if (list == null) return;
         for (int i = 0; i < list.length(); i++) {
             JSONObject item = list.optJSONObject(i);
+            if (item == null) continue;
             content.addView(button((item.optBoolean("done", false) ? "✓ " : "□ ") + item.optString("title", "Item"), () -> {
-                item.put("done", !item.optBoolean("done", false));
+                setBool(item, "done", !item.optBoolean("done", false));
                 saveData();
                 showChecklist();
             }));
@@ -231,24 +240,48 @@ public class MainActivity extends Activity {
         JSONArray copy = new JSONArray();
         for (int i = 0; i < array.length(); i++) if (i != index) copy.put(array.opt(i));
         while (array.length() > 0) array.remove(0);
-        for (int i = 0; i < copy.length(); i++) array.put(copy.opt(i));
+        for (int i = 0; i < copy.length(); i++) copyValue(array, copy.opt(i));
+    }
+
+    private void copyValue(JSONArray array, Object value) {
+        array.put(value);
+    }
+
+    private void setBool(JSONObject object, String key, boolean value) {
+        try {
+            object.put(key, value);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private JSONObject item(String titleKey, String titleValue, String boolKey, boolean boolValue) {
+        JSONObject object = new JSONObject();
+        try {
+            object.put(titleKey, titleValue);
+            object.put(boolKey, boolValue);
+        } catch (Exception ignored) {
+        }
+        return object;
     }
 
     private JSONObject defaultData() {
         JSONObject root = new JSONObject();
-        root.put("project_name", "BuildPilot");
-        root.put("goal", "Keep the next playable game-dev step visible.");
-        root.put("tasks", new JSONArray()
-                .put(new JSONObject().put("title", "Make one playable room").put("done", false))
-                .put(new JSONObject().put("title", "Add player movement").put("done", false))
-                .put(new JSONObject().put("title", "Add flashlight interaction").put("done", false)));
-        root.put("bugs", new JSONArray()
-                .put(new JSONObject().put("title", "Example: player clips through wall").put("fixed", false)));
-        root.put("checklist", new JSONArray()
-                .put(new JSONObject().put("title", "Project opens without errors").put("done", true))
-                .put(new JSONObject().put("title", "Main screen loads").put("done", true))
-                .put(new JSONObject().put("title", "Debug APK exported").put("done", false))
-                .put(new JSONObject().put("title", "Install APK on phone").put("done", false)));
+        try {
+            root.put("project_name", "BuildPilot");
+            root.put("goal", "Keep the next playable game-dev step visible.");
+            root.put("tasks", new JSONArray()
+                    .put(item("title", "Make one playable room", "done", false))
+                    .put(item("title", "Add player movement", "done", false))
+                    .put(item("title", "Add flashlight interaction", "done", false)));
+            root.put("bugs", new JSONArray()
+                    .put(item("title", "Example: player clips through wall", "fixed", false)));
+            root.put("checklist", new JSONArray()
+                    .put(item("title", "Project opens without errors", "done", true))
+                    .put(item("title", "Main screen loads", "done", true))
+                    .put(item("title", "Debug APK exported", "done", false))
+                    .put(item("title", "Install APK on phone", "done", false)));
+        } catch (Exception ignored) {
+        }
         return root;
     }
 }
