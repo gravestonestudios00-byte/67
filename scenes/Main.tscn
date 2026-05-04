@@ -1,0 +1,172 @@
+[gd_scene load_steps=2 format=3 uid="uid://buildpilot_main"]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.07, 0.09, 0.14, 1)
+
+[node name="Root" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 48
+
+[node name="VBox" type="VBoxContainer" parent="Root"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Root/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 42
+text = "BuildPilot"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Root/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Solo game dev command center"
+horizontal_alignment = 1
+
+[node name="ProjectCard" type="PanelContainer" parent="Root/VBox"]
+layout_mode = 2
+
+[node name="ProjectBox" type="VBoxContainer" parent="Root/VBox/ProjectCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ProjectName" type="Label" parent="Root/VBox/ProjectCard/ProjectBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Project"
+
+[node name="ProjectGoal" type="Label" parent="Root/VBox/ProjectCard/ProjectBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Goal"
+
+[node name="Progress" type="ProgressBar" parent="Root/VBox/ProjectCard/ProjectBox"]
+layout_mode = 2
+max_value = 100.0
+value = 0.0
+show_percentage = true
+
+[node name="Tabs" type="HBoxContainer" parent="Root/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TasksButton" type="Button" parent="Root/VBox/Tabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Tasks"
+
+[node name="BugsButton" type="Button" parent="Root/VBox/Tabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Bugs"
+
+[node name="ChecklistButton" type="Button" parent="Root/VBox/Tabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "APK"
+
+[node name="Stack" type="TabContainer" parent="Root/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+tabs_visible = false
+
+[node name="Tasks" type="VBoxContainer" parent="Root/VBox/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TaskInput" type="LineEdit" parent="Root/VBox/Stack/Tasks"]
+layout_mode = 2
+placeholder_text = "New task, ex: Add flashlight pickup"
+
+[node name="AddTaskButton" type="Button" parent="Root/VBox/Stack/Tasks"]
+layout_mode = 2
+text = "Add Task"
+
+[node name="TaskList" type="ItemList" parent="Root/VBox/Stack/Tasks"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TaskActions" type="HBoxContainer" parent="Root/VBox/Stack/Tasks"]
+layout_mode = 2
+
+[node name="ToggleTaskButton" type="Button" parent="Root/VBox/Stack/Tasks/TaskActions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Toggle Done"
+
+[node name="DeleteTaskButton" type="Button" parent="Root/VBox/Stack/Tasks/TaskActions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Delete"
+
+[node name="Bugs" type="VBoxContainer" parent="Root/VBox/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BugInput" type="LineEdit" parent="Root/VBox/Stack/Bugs"]
+layout_mode = 2
+placeholder_text = "New bug, ex: Player clips through wall"
+
+[node name="AddBugButton" type="Button" parent="Root/VBox/Stack/Bugs"]
+layout_mode = 2
+text = "Add Bug"
+
+[node name="BugList" type="ItemList" parent="Root/VBox/Stack/Bugs"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BugActions" type="HBoxContainer" parent="Root/VBox/Stack/Bugs"]
+layout_mode = 2
+
+[node name="ToggleBugButton" type="Button" parent="Root/VBox/Stack/Bugs/BugActions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Toggle Fixed"
+
+[node name="DeleteBugButton" type="Button" parent="Root/VBox/Stack/Bugs/BugActions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Delete"
+
+[node name="Checklist" type="VBoxContainer" parent="Root/VBox/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ChecklistTitle" type="Label" parent="Root/VBox/Stack/Checklist"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "APK Build Checklist"
+
+[node name="ChecklistList" type="ItemList" parent="Root/VBox/Stack/Checklist"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Status" type="Label" parent="Root/VBox"]
+layout_mode = 2
+text = "Ready"
+horizontal_alignment = 1
